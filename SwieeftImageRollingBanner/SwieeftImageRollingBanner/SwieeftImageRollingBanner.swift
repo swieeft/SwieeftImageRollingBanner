@@ -22,7 +22,7 @@ class SwieeftImageRollingBanner: UIView {
         didSet {
             addImageView()
             downloadImages()
-            setIndexNumber(index: 0)
+            setIndexNumber(index: 1)
             startTimer()
         }
     }
@@ -37,7 +37,6 @@ class SwieeftImageRollingBanner: UIView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         setScrollView()
         setPageLabel()
     }
@@ -68,13 +67,15 @@ class SwieeftImageRollingBanner: UIView {
     
     private func setPageLabel() {
         pageLabel = UILabel()
+        pageLabel.translatesAutoresizingMaskIntoConstraints = false
         pageLabel.textColor = .white
+        pageLabel.font = UIFont.systemFont(ofSize: 20)
         pageLabel.text = "0/0"
         
         self.addSubview(pageLabel)
         
-        pageLabel.trailingAnchor.constraint(equalToSystemSpacingAfter: self.trailingAnchor, multiplier: 20).isActive = true
-        pageLabel.bottomAnchor.constraint(equalToSystemSpacingBelow: self.bottomAnchor, multiplier: 20).isActive = true
+        pageLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -20).isActive = true
+        pageLabel.bottomAnchor.constraint(equalTo: self.bottomAnchor, constant: -20).isActive = true
     }
     
     private func addImageView() {
@@ -99,11 +100,19 @@ class SwieeftImageRollingBanner: UIView {
             let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapImage))
             imageView.isUserInteractionEnabled = true
             imageView.addGestureRecognizer(tapGesture)
+            
+            scrollView.addSubview(imageView)
+            imageViews.append(imageView)
         }
+        
+        let width = scrollViewSize.width * CGFloat(imageViewCount)
+        scrollView.contentSize = CGSize(width: width, height: self.frame.height)
+        
+        scrollView.contentOffset.x = scrollViewSize.width
     }
     
     private func setIndexNumber(index: Int) {
-        pageLabel.text = "\(index + 1)/\(imageUrls.count)"
+        pageLabel.text = "\(index)/\(imageUrls.count)"
     }
     
     @objc private func onTapImage(sender: UITapGestureRecognizer) {
@@ -122,6 +131,7 @@ class SwieeftImageRollingBanner: UIView {
             } else {
                 urlStr = imageUrls[i - 1]
             }
+            print(urlStr)
             
             imageViews[i].imageDownload(link: urlStr)
         }
@@ -129,7 +139,7 @@ class SwieeftImageRollingBanner: UIView {
     
     private func startTimer() {
         timer.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: timerInterval, repeats: true, block: { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: timerInterval, repeats: true, block: { timer in
           
             let index = Int(self.scrollView.contentOffset.x / self.scrollView.bounds.width)
             var nextIndex = index + 1
